@@ -1,7 +1,7 @@
 require 'active_support/core_ext/hash/indifferent_access'
 require_relative './cart'
-require_relative './cashier'
 require_relative './user'
+require_relative './calculate_bill'
 
 PRICE_TABLE = {
   milk: {
@@ -35,12 +35,13 @@ user_input = gets.chomp.split(",").map(&:strip) # Make an array of the items pic
 
 user_input.each { |item| user.add_to_cart(item) } # Add to cart by customer
 
-cashier = Cashier.new(user.cart)
+calc = CalculateTotalBill.new(cart) # calculator class
+discounted_calc = DiscountedBill.new(cart) # discounted calculator class
 
 puts "\n"
 puts "Item               Qquantity             Price"
 puts "-----------------------------------------------"
                                  
 cart.items.each { |item, cnt| puts "#{item}               #{cnt}               #{PRICE_TABLE[item][:unit_price]}"}
-puts "Total price : $#{ cashier.calculate_total_sale_price }"
-puts "Yous saved $#{ ( cashier.calculate_total_price - cashier.calculate_total_sale_price).round(2) } today."
+puts "Total price : $#{ discounted_calc.calculate_bill }"
+puts "Yous saved $#{ ( calc.calculate_bill - discounted_calc.calculate_bill).round(2) } today."
