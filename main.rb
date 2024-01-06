@@ -2,6 +2,7 @@ require 'active_support/core_ext/hash/indifferent_access'
 require_relative './cart'
 require_relative './user'
 require_relative './calculate_bill'
+require_relative './shopping_controller'
 
 PRICE_TABLE = {
   milk: {
@@ -26,22 +27,32 @@ PRICE_TABLE = {
   }
 }.with_indifferent_access.freeze
 
-cart = Cart.new # Initializing a cart
-user = User.new(cart) # Initializing a user
+class InputHandler
+  attr_reader :input, :request, :controller_result, :result
 
-puts "Please enter all the items purchased separated by a comma:"
+  def initialize(input)
+    @input = input
+  end
 
-user_input = gets.chomp.split(",").map(&:strip) # Make an array of the items picked up by the customer
+  def perform
+    form_request &&
+      call_controller &&
+      set_result
+  end
 
-user_input.each { |item| user.add_to_cart(item) } # Add to cart by customer
+  def form_request
+    @request = { item_list: input }
+  end
 
-calc = CalculateTotalBill.new(cart) # calculator class
-discounted_calc = DiscountedBill.new(cart) # discounted calculator class
+  def call_controller
+    shopping = ShoppingController.new(request)
+    @controller_result = shopping.calculate_bill
+  end
 
-puts "\n"
-puts "Item               Qquantity             Price"
-puts "-----------------------------------------------"
-                                 
-cart.items.each { |item, cnt| puts "#{item}               #{cnt}               #{PRICE_TABLE[item][:unit_price]}"}
-puts "Total price : $#{ discounted_calc.calculate_bill }"
-puts "Yous saved $#{ ( calc.calculate_bill - discounted_calc.calculate_bill).round(2) } today."
+  def set_result
+    @result = controller_result
+  end
+end
+
+input = InputHandler.new("milk,milk,milk,bread,bread,bread,bread,apple,banana")
+puts input.perform
