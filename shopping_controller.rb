@@ -1,8 +1,14 @@
+require 'json'
+
 class BaseController
   attr_reader :request, :response
   def initialize(request)
     @request = request
     @response = {}
+  end
+
+  def json(resp)
+    JSON.generate(resp)
   end
 end
 
@@ -18,6 +24,6 @@ class ShoppingController < BaseController
     @response[:total_bill] = discounted_calc.calculate_bill
     @response[:saved] = ( calc.calculate_bill - discounted_calc.calculate_bill).round(2)
     
-    response
+    return json(response)
   end
 end
